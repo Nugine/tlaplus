@@ -45,9 +45,9 @@ pub async fn run() -> Result<()> {
 
     if needs_download {
         let url = tla2tools_asset.browser_download_url.clone();
-        let path = Manifest::tla2tools_jar_path(&latest_version);
+        let new_path = Manifest::tla2tools_jar_path(&latest_version);
         let msg = format!("downloading tla2tools v{latest_version}");
-        download(url, &path, msg).await?;
+        download(url, &new_path, msg).await?;
 
         let old_path = manifest.tla2tools_current_path();
 
@@ -58,6 +58,13 @@ pub async fn run() -> Result<()> {
 
         if let Some(old_path) = old_path {
             fs::remove_file(&old_path).ok();
+        }
+
+        #[cfg(target_os = "linux")]
+        {
+            let link_path = Manifest::tla2tools_dir().join("latest");
+            fs::remove_file(&link_path).ok();
+            std::os::unix::fs::symlink(new_path, link_path)?;
         }
 
         println!("finished");
