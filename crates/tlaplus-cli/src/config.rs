@@ -1,9 +1,9 @@
 use crate::manifest::Manifest;
 
 use std::fs;
-use std::path::{Path, PathBuf};
 
 use anyhow::Result;
+use camino::{Utf8Path, Utf8PathBuf};
 use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
 
@@ -18,8 +18,8 @@ pub struct JavaConfig {
 }
 
 impl Config {
-    pub fn path() -> &'static Path {
-        static PATH: OnceCell<PathBuf> = OnceCell::new();
+    pub fn path() -> &'static Utf8Path {
+        static PATH: OnceCell<Utf8PathBuf> = OnceCell::new();
         let home = Manifest::home_dir();
         PATH.get_or_init(|| home.join("config.toml"))
     }

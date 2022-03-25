@@ -2,9 +2,9 @@ use crate::manifest::{Manifest, Tla2ToolsManifest};
 
 use std::fs;
 use std::io::Write;
-use std::path::Path;
 
 use anyhow::{Context, Result};
+use camino::Utf8Path;
 use futures_util::StreamExt;
 use indicatif::{ProgressBar, ProgressStyle};
 use reqwest::Url;
@@ -66,7 +66,7 @@ pub async fn run() -> Result<()> {
     Ok(())
 }
 
-async fn download(url: Url, path: &Path, msg: String) -> Result<()> {
+async fn download(url: Url, path: &Utf8Path, msg: String) -> Result<()> {
     let mut file = NamedTempFile::new()?;
 
     let resp = reqwest::get(url).await?;
