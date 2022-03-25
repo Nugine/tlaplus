@@ -1,35 +1,31 @@
 #![forbid(unsafe_code)]
 #![deny(clippy::all)]
 
+mod config;
 mod manifest;
-mod cmds {
-    pub mod translate;
-    pub mod update;
-}
 
-use std::env;
+mod translate;
+mod update;
 
 use anyhow::Result;
 use clap::StructOpt;
 
 #[derive(clap::Parser)]
 #[non_exhaustive]
-enum Command {
+enum Opt {
+    #[clap(alias = "u")]
     Update,
-    Translate,
+    #[clap(alias = "t")]
+    Translate(translate::Opt),
 }
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<()> {
-    if env::var_os("RUST_BACKTRACE").is_none() {
-        env::set_var("RUST_BACKTRACE", "1")
-    }
+    let opt = Opt::parse();
 
-    let cmd = Command::parse();
-
-    match cmd {
-        Command::Update => cmds::update::run().await?,
-        Command::Translate => todo!(),
+    match opt {
+        Opt::Update => update::run().await?,
+        Opt::Translate(opt) => translate::run(opt).await?,
     }
 
     Ok(())

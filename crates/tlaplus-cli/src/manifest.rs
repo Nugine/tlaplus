@@ -78,6 +78,11 @@ impl Manifest {
         serde_json::to_writer(file, self)?;
         Ok(())
     }
+
+    pub fn tla2tools_current_path(&self) -> Option<PathBuf> {
+        let m = self.tla2tools.as_ref()?;
+        Some(Self::tla2tools_jar_path(&m.current_version))
+    }
 }
 
 fn home_dir() -> Option<PathBuf> {

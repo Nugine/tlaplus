@@ -49,10 +49,7 @@ pub async fn run() -> Result<()> {
         let msg = format!("downloading tla2tools v{latest_version}");
         download(url, &path, msg).await?;
 
-        let old_path = manifest
-            .tla2tools
-            .as_ref()
-            .map(|m| Manifest::tla2tools_jar_path(&m.current_version));
+        let old_path = manifest.tla2tools_current_path();
 
         manifest.tla2tools = Some(Tla2ToolsManifest {
             current_version: latest_version,
