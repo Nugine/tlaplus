@@ -6,6 +6,7 @@ mod manifest;
 
 mod cmd {
     pub mod check;
+    pub mod tex;
     pub mod translate;
     pub mod update;
 }
@@ -24,6 +25,8 @@ enum Opt {
     Translate(cmd::translate::Opt),
     #[clap(alias = "c")]
     Check(cmd::check::Opt),
+    #[clap(alias = "x")]
+    Tex(cmd::tex::Opt),
 }
 
 #[tokio::main(flavor = "current_thread")]
@@ -34,6 +37,7 @@ async fn main() -> Result<()> {
         Opt::Update => cmd::update::run().await?,
         Opt::Translate(opt) => cmd::translate::run(opt).await?,
         Opt::Check(opt) => cmd::check::run(opt).await?,
+        Opt::Tex(opt) => cmd::tex::run(opt).await?,
     }
 
     Ok(())

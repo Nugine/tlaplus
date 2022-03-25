@@ -1,4 +1,5 @@
 dev:
+    cargo fmt
     cargo check
     cargo clippy
     cargo build --release
