@@ -1,7 +1,7 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::{env, fs, io};
 
-use anyhow::{bail, Result};
+use anyhow::Result;
 use once_cell::sync::OnceCell;
 use semver::Version;
 use serde::{Deserialize, Serialize};
@@ -21,20 +21,28 @@ impl Manifest {
         Self { tla2tools: None }
     }
 
-    pub fn load() -> Result<Self> {
+    pub fn home_dir() -> &'static Path {
         static HOME: OnceCell<PathBuf> = OnceCell::new();
-
-        let home = HOME.get_or_try_init(|| {
+        HOME.get_or_init(|| {
             let home = match tlaplus_home_dir() {
                 Some(h) => h,
-                None => bail!("Could not find tlaplus home directory"),
+                None => panic!("Could not find tlaplus home directory"),
             };
 
-            fs::create_dir_all(&home)?;
-            Ok(home)
-        })?;
+            fs::create_dir_all(&home).ok();
+            assert!(home.exists());
+            home
+        })
+    }
 
-        let manifest_path = home.join("manifest.json");
+    pub fn path() -> &'static Path {
+        static PATH: OnceCell<PathBuf> = OnceCell::new();
+        let home = Self::home_dir();
+        PATH.get_or_init(|| home.join("manifest.json"))
+    }
+
+    pub fn load() -> Result<Self> {
+        let manifest_path = Self::path();
         let exists = manifest_path.exists();
 
         let manifest = if exists {
@@ -44,11 +52,16 @@ impl Manifest {
         };
 
         if !exists {
-            let file = fs::File::create(&manifest_path)?;
-            write_pretty_json(file, &Self::empty())?;
+            manifest.save()?;
         }
 
         Ok(manifest)
+    }
+
+    pub fn save(&self) -> Result<()> {
+        let file = fs::File::create(Self::path())?;
+        write_pretty_json(file, self)?;
+        Ok(())
     }
 }
 

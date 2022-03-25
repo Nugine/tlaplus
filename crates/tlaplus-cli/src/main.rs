@@ -18,7 +18,8 @@ enum Command {
     Tlc,
 }
 
-fn main() -> Result<()> {
+#[tokio::main(flavor = "current_thread")]
+async fn main() -> Result<()> {
     if env::var_os("RUST_BACKTRACE").is_none() {
         env::set_var("RUST_BACKTRACE", "1")
     }
@@ -26,7 +27,7 @@ fn main() -> Result<()> {
     let cmd = Command::parse();
 
     match cmd {
-        Command::Update => cmds::update::run()?,
+        Command::Update => cmds::update::run().await?,
         Command::Tlc => todo!(),
     }
 
