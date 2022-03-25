@@ -3,6 +3,7 @@
 
 mod manifest;
 mod cmds {
+    pub mod translate;
     pub mod update;
 }
 
@@ -15,7 +16,7 @@ use clap::StructOpt;
 #[non_exhaustive]
 enum Command {
     Update,
-    Tlc,
+    Translate,
 }
 
 #[tokio::main(flavor = "current_thread")]
@@ -28,7 +29,7 @@ async fn main() -> Result<()> {
 
     match cmd {
         Command::Update => cmds::update::run().await?,
-        Command::Tlc => todo!(),
+        Command::Translate => todo!(),
     }
 
     Ok(())

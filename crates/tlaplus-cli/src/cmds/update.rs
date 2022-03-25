@@ -30,11 +30,8 @@ pub async fn run() -> Result<()> {
         .find(|a| a.name == "tla2tools.jar")
         .with_context(|| "Could not find tla2tools.jar in the latest release")?;
 
-    let tla2tools_dir = Manifest::home_dir().join("tla2tools");
-    fs::create_dir_all(&tla2tools_dir)?;
-
     let needs_download = match manifest.tla2tools {
-        Some(m) => {
+        Some(ref m) => {
             println!("current version: {}", m.current_version);
             m.current_version != latest_version
         }
@@ -48,17 +45,26 @@ pub async fn run() -> Result<()> {
 
     if needs_download {
         let url = tla2tools_asset.browser_download_url.clone();
-        let path = tla2tools_dir.join(format!("tla2tools.{latest_version}.jar"));
+        let path = Manifest::tla2tools_jar_path(&latest_version);
         let msg = format!("downloading tla2tools v{latest_version}");
         download(url, &path, msg).await?;
+
+        let old_path = manifest
+            .tla2tools
+            .as_ref()
+            .map(|m| Manifest::tla2tools_jar_path(&m.current_version));
 
         manifest.tla2tools = Some(Tla2ToolsManifest {
             current_version: latest_version,
         });
         manifest.save()?;
-    }
 
-    println!("finished");
+        if let Some(old_path) = old_path {
+            fs::remove_file(&old_path).ok();
+        }
+
+        println!("finished");
+    }
 
     Ok(())
 }

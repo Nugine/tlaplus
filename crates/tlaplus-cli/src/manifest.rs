@@ -1,5 +1,5 @@
 use std::path::{Path, PathBuf};
-use std::{env, fs, io};
+use std::{env, fs};
 
 use anyhow::Result;
 use once_cell::sync::OnceCell;
@@ -35,6 +35,21 @@ impl Manifest {
         })
     }
 
+    pub fn tla2tools_dir() -> &'static Path {
+        static PATH: OnceCell<PathBuf> = OnceCell::new();
+        let home = Self::home_dir();
+        PATH.get_or_init(|| {
+            let tla2tools_dir = home.join("tla2tools");
+            fs::create_dir_all(&tla2tools_dir).ok();
+            assert!(tla2tools_dir.exists());
+            tla2tools_dir
+        })
+    }
+
+    pub fn tla2tools_jar_path(version: &Version) -> PathBuf {
+        Self::tla2tools_dir().join(format!("tla2tools.v{version}.jar"))
+    }
+
     pub fn path() -> &'static Path {
         static PATH: OnceCell<PathBuf> = OnceCell::new();
         let home = Self::home_dir();
@@ -60,7 +75,7 @@ impl Manifest {
 
     pub fn save(&self) -> Result<()> {
         let file = fs::File::create(Self::path())?;
-        write_pretty_json(file, self)?;
+        serde_json::to_writer(file, self)?;
         Ok(())
     }
 }
@@ -89,15 +104,4 @@ fn tlaplus_home_dir() -> Option<PathBuf> {
     }
 
     None
-}
-
-fn write_pretty_json<W, T>(writer: W, value: &T) -> io::Result<()>
-where
-    W: io::Write,
-    T: Serialize,
-{
-    let formatter = serde_json::ser::PrettyFormatter::with_indent("   ".as_ref());
-    let mut ser = serde_json::ser::Serializer::with_formatter(writer, formatter);
-    value.serialize(&mut ser)?;
-    Ok(())
 }
