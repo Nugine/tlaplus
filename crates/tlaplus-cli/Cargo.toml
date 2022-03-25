@@ -10,3 +10,5 @@ name = "tlaplus"
 path = "src/main.rs"
 
 [dependencies]
+anyhow = { version = "1.0.56", features = ["backtrace"] }
+clap = { version = "3.1.6", features = ["derive"] }
