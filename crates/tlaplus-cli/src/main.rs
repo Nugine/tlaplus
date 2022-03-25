@@ -4,8 +4,11 @@
 mod config;
 mod manifest;
 
-mod translate;
-mod update;
+mod cmd {
+    pub mod check;
+    pub mod translate;
+    pub mod update;
+}
 
 use std::process::{Command, Stdio};
 
@@ -18,7 +21,9 @@ enum Opt {
     #[clap(alias = "u")]
     Update,
     #[clap(alias = "t")]
-    Translate(translate::Opt),
+    Translate(cmd::translate::Opt),
+    #[clap(alias = "c")]
+    Check(cmd::check::Opt),
 }
 
 #[tokio::main(flavor = "current_thread")]
@@ -26,8 +31,9 @@ async fn main() -> Result<()> {
     let opt = Opt::parse();
 
     match opt {
-        Opt::Update => update::run().await?,
-        Opt::Translate(opt) => translate::run(opt).await?,
+        Opt::Update => cmd::update::run().await?,
+        Opt::Translate(opt) => cmd::translate::run(opt).await?,
+        Opt::Check(opt) => cmd::check::run(opt).await?,
     }
 
     Ok(())
