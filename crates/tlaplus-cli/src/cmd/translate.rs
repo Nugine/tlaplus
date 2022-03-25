@@ -7,6 +7,6 @@ pub struct Opt {
 }
 
 pub async fn run(opt: Opt) -> Result<()> {
-    let args = vec!["pcal.trans", opt.input.as_str()];
+    let args = vec!["pcal.trans".to_owned(), opt.input.into()];
     crate::exec_tla2tools(args)
 }

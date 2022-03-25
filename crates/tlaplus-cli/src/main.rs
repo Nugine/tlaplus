@@ -39,7 +39,7 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-pub(crate) fn exec_tla2tools(args: Vec<&str>) -> Result<()> {
+pub(crate) fn exec_tla2tools(args: Vec<String>) -> Result<()> {
     use crate::config::Config;
     use crate::manifest::Manifest;
 
@@ -50,24 +50,16 @@ pub(crate) fn exec_tla2tools(args: Vec<&str>) -> Result<()> {
         .tla2tools_current_path()
         .with_context(|| "Could not find tla2tools. Please update.")?;
 
-    let argv = {
-        let mut v = vec!["java"];
+    let mut cmd = Command::new("java");
 
-        v.push("-cp");
-        v.push(jar_path.as_ref());
+    cmd.arg("-cp");
+    cmd.arg(jar_path);
 
-        if let Some(ref java_config) = config.java {
-            v.extend(java_config.args.iter().map(|s| s.as_str()));
-        }
+    if let Some(java_config) = config.java {
+        cmd.args(java_config.args.into_iter());
+    }
 
-        v.extend(args);
-
-        v
-    };
-
-    let mut cmd = Command::new(argv[0]);
-
-    cmd.args(&argv[1..]);
+    cmd.args(args.into_iter());
 
     cmd.stdin(Stdio::inherit())
         .stdout(Stdio::inherit())
