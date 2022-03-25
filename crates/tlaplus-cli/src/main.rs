@@ -77,7 +77,7 @@ pub(crate) fn exec_tla2tools(args: Vec<String>) -> Result<()> {
         {
             use std::os::unix::prelude::ExitStatusExt;
             bail!(
-                "pcal.trans failed. code = {:?}, signal = {:?}",
+                "tla2tools failed. code = {:?}, signal = {:?}",
                 exit_status.code(),
                 exit_status.signal()
             );
