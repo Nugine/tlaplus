@@ -14,59 +14,72 @@ use tempfile::NamedTempFile;
 pub async fn run() -> Result<()> {
     let mut manifest = Manifest::load()?;
 
-    let gh = octocrab::instance();
+    {
+        println!("updating tla2tools ...");
 
-    let release = gh
-        .repos("tlaplus", "tlaplus")
-        .releases()
-        .get_latest()
-        .await?;
+        let gh = octocrab::instance();
 
-    let latest_version = Version::parse(&release.tag_name.replace('v', "")).unwrap();
+        let release = gh
+            .repos("tlaplus", "tlaplus")
+            .releases()
+            .get_latest()
+            .await?;
 
-    let tla2tools_asset = release
-        .assets
-        .iter()
-        .find(|a| a.name == "tla2tools.jar")
-        .with_context(|| "Could not find tla2tools.jar in the latest release")?;
+        let latest_version = Version::parse(&release.tag_name.replace('v', "")).unwrap();
 
-    let needs_download = match manifest.tla2tools {
-        Some(ref m) => {
-            println!("current version: {}", m.current_version);
-            m.current_version != latest_version
+        let tla2tools_asset = release
+            .assets
+            .iter()
+            .find(|a| a.name == "tla2tools.jar")
+            .with_context(|| "Could not find tla2tools.jar in the latest release")?;
+
+        let needs_download = match manifest.tla2tools {
+            Some(ref m) => {
+                println!("current version: {}", m.current_version);
+                m.current_version != latest_version
+            }
+            None => {
+                println!("current version: none");
+                true
+            }
+        };
+
+        println!("latest  version: {latest_version}");
+
+        if needs_download {
+            let url = tla2tools_asset.browser_download_url.clone();
+            let new_path = Manifest::tla2tools_jar_path(&latest_version);
+            let msg = format!("downloading tla2tools v{latest_version}");
+            download(url, &new_path, msg).await?;
+
+            let old_path = manifest.tla2tools_current_path();
+
+            manifest.tla2tools = Some(Tla2ToolsManifest {
+                current_version: latest_version,
+            });
+            manifest.save()?;
+
+            if let Some(old_path) = old_path {
+                fs::remove_file(&old_path).ok();
+            }
+
+            #[cfg(target_os = "linux")]
+            {
+                let link_path = Manifest::tla2tools_dir().join("latest");
+                fs::remove_file(&link_path).ok();
+                std::os::unix::fs::symlink(new_path, link_path)?;
+            }
+
+            println!("finished");
         }
-        None => {
-            println!("current version: none");
-            true
-        }
-    };
+    }
 
-    println!("latest  version: {latest_version}");
-
-    if needs_download {
-        let url = tla2tools_asset.browser_download_url.clone();
-        let new_path = Manifest::tla2tools_jar_path(&latest_version);
-        let msg = format!("downloading tla2tools v{latest_version}");
-        download(url, &new_path, msg).await?;
-
-        let old_path = manifest.tla2tools_current_path();
-
-        manifest.tla2tools = Some(Tla2ToolsManifest {
-            current_version: latest_version,
-        });
-        manifest.save()?;
-
-        if let Some(old_path) = old_path {
-            fs::remove_file(&old_path).ok();
-        }
-
-        #[cfg(target_os = "linux")]
-        {
-            let link_path = Manifest::tla2tools_dir().join("latest");
-            fs::remove_file(&link_path).ok();
-            std::os::unix::fs::symlink(new_path, link_path)?;
-        }
-
+    {
+        println!("updating tlatex.sty ...");
+        let url = Url::parse("https://lamport.azurewebsites.net/tla/tlatex.sty").unwrap();
+        let path = Manifest::tlatex_sty_path();
+        let msg = "downloading tlatex.sty".to_owned();
+        download(url, path, msg).await?;
         println!("finished");
     }
 
