@@ -3,7 +3,7 @@ dev:
     cargo check
     cargo clippy
     cargo build --release
-    cargo test
+    cargo test --release
     ls -lh target/release/tlaplus-cli
 
 install:

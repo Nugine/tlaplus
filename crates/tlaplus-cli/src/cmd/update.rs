@@ -1,7 +1,7 @@
 use crate::manifest::{Manifest, Tla2ToolsManifest};
 
-use std::fs;
-use std::io::Write;
+use std::fs::{self, File};
+use std::io::{self, Write};
 
 use anyhow::{Context, Result};
 use camino::Utf8Path;
@@ -36,7 +36,8 @@ pub async fn run() -> Result<()> {
         let needs_download = match manifest.tla2tools {
             Some(ref m) => {
                 println!("current version: {}", m.current_version);
-                m.current_version != latest_version
+                let old_path = manifest.tla2tools_current_path().unwrap();
+                !old_path.exists() || m.current_version != latest_version
             }
             None => {
                 println!("current version: none");
@@ -52,20 +53,26 @@ pub async fn run() -> Result<()> {
             let msg = format!("downloading tla2tools v{latest_version}");
             download(url, &new_path, msg).await?;
 
+            let old_version = manifest
+                .tla2tools
+                .as_ref()
+                .map(|m| m.current_version.clone());
             let old_path = manifest.tla2tools_current_path();
 
             manifest.tla2tools = Some(Tla2ToolsManifest {
-                current_version: latest_version,
+                current_version: latest_version.clone(),
             });
             manifest.save()?;
 
-            if let Some(old_path) = old_path {
-                fs::remove_file(&old_path).ok();
+            if let Some(ref old_path) = old_path {
+                if old_version.unwrap() != latest_version {
+                    fs::remove_file(old_path).ok();
+                }
             }
 
             #[cfg(target_os = "linux")]
             {
-                let link_path = Manifest::tla2tools_dir().join("latest");
+                let link_path = Manifest::tla2tools_dir().join("tla2tools.latest.jar");
                 fs::remove_file(&link_path).ok();
                 std::os::unix::fs::symlink(new_path, link_path)?;
             }
@@ -75,12 +82,11 @@ pub async fn run() -> Result<()> {
     }
 
     {
-        println!("updating tlatex.sty ...");
-        let url = Url::parse("https://lamport.azurewebsites.net/tla/tlatex.sty").unwrap();
-        let path = Manifest::tlatex_sty_path();
-        let msg = "downloading tlatex.sty".to_owned();
-        download(url, path, msg).await?;
-        println!("finished");
+        let jar_path = manifest.tla2tools_current_path().unwrap();
+        let mut zip = zip::ZipArchive::new(File::open(jar_path)?)?;
+        let mut src = zip.by_name("tla2tex/tlatex.sty")?;
+        let mut dst = File::create(Manifest::tlatex_sty_path())?;
+        io::copy(&mut src, &mut dst)?;
     }
 
     Ok(())
