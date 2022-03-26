@@ -1,7 +1,7 @@
 use crate::manifest::{Manifest, Tla2ToolsManifest};
 
-use std::fs::{self, File};
-use std::io::{self, Write};
+use std::fs;
+use std::io::Write;
 
 use anyhow::{Context, Result};
 use camino::Utf8Path;
@@ -79,14 +79,6 @@ pub async fn run() -> Result<()> {
 
             println!("finished");
         }
-    }
-
-    {
-        let jar_path = manifest.tla2tools_current_path().unwrap();
-        let mut zip = zip::ZipArchive::new(File::open(jar_path)?)?;
-        let mut src = zip.by_name("tla2tex/tlatex.sty")?;
-        let mut dst = File::create(Manifest::tlatex_sty_path())?;
-        io::copy(&mut src, &mut dst)?;
     }
 
     Ok(())

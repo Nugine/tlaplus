@@ -51,12 +51,6 @@ impl Manifest {
         Self::tla2tools_dir().join(format!("tla2tools.v{version}.jar"))
     }
 
-    pub fn tlatex_sty_path() -> &'static Utf8Path {
-        static PATH: OnceCell<Utf8PathBuf> = OnceCell::new();
-        let home = Self::home_dir();
-        PATH.get_or_init(|| home.join("tlatex.sty"))
-    }
-
     pub fn path() -> &'static Utf8Path {
         static PATH: OnceCell<Utf8PathBuf> = OnceCell::new();
         let home = Self::home_dir();
