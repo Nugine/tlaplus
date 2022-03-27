@@ -7,6 +7,7 @@ mod manifest;
 mod cmd {
     pub mod check;
     pub mod home;
+    pub mod sany;
     pub mod tex;
     pub mod translate;
     pub mod update;
@@ -20,6 +21,8 @@ use clap::StructOpt;
 #[derive(clap::Parser)]
 #[non_exhaustive]
 enum Opt {
+    #[clap(alias = "h")]
+    Home,
     #[clap(alias = "u")]
     Update,
     #[clap(alias = "t")]
@@ -28,8 +31,8 @@ enum Opt {
     Check(cmd::check::Opt),
     #[clap(alias = "x")]
     Tex(cmd::tex::Opt),
-    #[clap(alias = "h")]
-    Home,
+    #[clap(alias = "s")]
+    Sany(cmd::sany::Opt),
 }
 
 #[tokio::main(flavor = "current_thread")]
@@ -42,6 +45,7 @@ async fn main() -> Result<()> {
         Opt::Check(opt) => cmd::check::run(opt).await?,
         Opt::Tex(opt) => cmd::tex::run(opt).await?,
         Opt::Home => cmd::home::run().await?,
+        Opt::Sany(opt) => cmd::sany::run(opt).await?,
     }
 
     Ok(())
