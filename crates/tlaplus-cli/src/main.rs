@@ -19,6 +19,7 @@ use anyhow::{bail, Context, Result};
 use clap::StructOpt;
 
 #[derive(clap::Parser)]
+#[clap(version)]
 #[non_exhaustive]
 enum Opt {
     #[clap(alias = "h")]
