@@ -5,20 +5,26 @@ use camino::Utf8PathBuf;
 pub struct Opt {
     spec: Utf8PathBuf,
 
-    #[clap(short, long)]
+    #[clap(long)]
     config: Option<Utf8PathBuf>,
 
-    #[clap(short, long)]
+    #[clap(long)]
     workers: Option<usize>,
 
-    #[clap(short, long)]
+    #[clap(long)]
     coverage: Option<u32>,
 
-    #[clap(short, long)]
+    #[clap(long)]
     ignore_deadlock: bool,
 
-    #[clap(short, long)]
+    #[clap(long)]
     cleanup: bool,
+
+    #[clap(long)]
+    meta_dir: Option<Utf8PathBuf>,
+
+    #[clap(long)]
+    user_file: Option<Utf8PathBuf>,
 }
 
 pub async fn run(opt: Opt) -> Result<()> {
@@ -48,6 +54,16 @@ pub async fn run(opt: Opt) -> Result<()> {
 
     if opt.cleanup {
         args.push("-cleanup".to_owned())
+    }
+
+    if let Some(meta_dir) = opt.meta_dir {
+        args.push("-metadir".to_owned());
+        args.push(meta_dir.into());
+    }
+
+    if let Some(user_file) = opt.user_file {
+        args.push("-userFile".to_owned());
+        args.push(user_file.into());
     }
 
     args.push(opt.spec.into());
