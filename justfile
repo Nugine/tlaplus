@@ -7,4 +7,4 @@ dev:
     ls -lh target/release/tlaplus-cli
 
 install:
-    cargo install --path crates/tlaplus-cli --offline
+    cargo install --path . --offline
