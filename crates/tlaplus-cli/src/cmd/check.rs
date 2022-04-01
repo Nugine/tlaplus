@@ -25,6 +25,9 @@ pub struct Opt {
 
     #[clap(long)]
     user_file: Option<Utf8PathBuf>,
+
+    #[clap(long)]
+    dump_state: Option<Utf8PathBuf>,
 }
 
 pub async fn run(opt: Opt) -> Result<()> {
@@ -64,6 +67,11 @@ pub async fn run(opt: Opt) -> Result<()> {
     if let Some(user_file) = opt.user_file {
         args.push("-userFile".to_owned());
         args.push(user_file.into());
+    }
+
+    if let Some(dump_state) = opt.dump_state {
+        args.push("-dump".to_owned());
+        args.push(dump_state.into());
     }
 
     args.push(opt.spec.into());
