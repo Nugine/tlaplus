@@ -6,7 +6,6 @@ edition = "2021"
 [dependencies]
 anyhow = { version = "1.0.56" }
 camino = "1.0.7"
-clap = { version = "3.1.6", features = ["derive"] }
 futures-util = "0.3.21"
 indicatif = "0.16.2"
 octocrab = { version = "0.15.4", features = ["rustls"] }
